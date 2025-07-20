@@ -1,0 +1,23 @@
+### List Dir
+GET http://localhost:3000
+
+### Download File
+GET http://localhost:3000/file.txt
+
+### Create Dir
+POST http://localhost:3000/dir
+
+### Upload File
+POST http://localhost:3000/file
+Content-Type: multipart/form-data
+
+< /Users/hossain/Projects/objctr/config.go
+
+### Copy File
+PUT http://localhost:3000/file.txt?to=dir/newFile.txt&action=copy
+
+### Move File
+PUT http://localhost:3000/newFile.txt?to=oldFile.txt
+
+### Delete File
+DELETE http://localhost:3000/oldFile.txt
