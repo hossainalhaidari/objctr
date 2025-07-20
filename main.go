@@ -2,10 +2,17 @@ package main
 
 import (
 	"net/http"
+	"os"
 	"strings"
 )
 
 func main() {
+	args := os.Args[1:]
+	if len(args) > 1 && args[0] == "hash" {
+		println(hash(args[1]))
+		return
+	}
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var header = r.Header.Get
 		var query = r.URL.Query().Get
@@ -30,7 +37,12 @@ func main() {
 			if isFile(fullPath) {
 				http.ServeFile(w, r, fullPath)
 			} else {
-				entries := list(fullPath)
+				success, entries := list(fullPath)
+				if !success {
+					http.Error(w, "Failed to list directory", http.StatusInternalServerError)
+					return
+				}
+
 				for _, entry := range entries {
 					w.Write([]byte(entry + "\n"))
 				}
@@ -55,9 +67,17 @@ func main() {
 					return
 				}
 
-				uploadFile(handler, fullPath)
+				success := uploadFile(handler, fullPath)
+				if !success {
+					http.Error(w, "Failed to delete path", http.StatusInternalServerError)
+					return
+				}
 			} else {
-				createDir(fullPath)
+				success := createDir(fullPath)
+				if !success {
+					http.Error(w, "Failed to delete path", http.StatusInternalServerError)
+					return
+				}
 			}
 
 			w.WriteHeader(http.StatusNoContent)
@@ -77,7 +97,12 @@ func main() {
 				return
 			}
 
-			move(fullPath, toFullPath)
+			success := move(fullPath, toFullPath)
+			if !success {
+				http.Error(w, "Failed to delete path", http.StatusInternalServerError)
+				return
+			}
+
 			w.WriteHeader(http.StatusNoContent)
 		case "PUT":
 			if !canWrite(key, path) || !canWrite(key, toPath) {
@@ -95,7 +120,12 @@ func main() {
 				return
 			}
 
-			copy(fullPath, toFullPath)
+			success := copy(fullPath, toFullPath)
+			if !success {
+				http.Error(w, "Failed to delete path", http.StatusInternalServerError)
+				return
+			}
+
 			w.WriteHeader(http.StatusNoContent)
 		case "DELETE":
 			if !canWrite(key, path) {
@@ -113,7 +143,12 @@ func main() {
 				return
 			}
 
-			delete(fullPath)
+			success := delete(fullPath)
+			if !success {
+				http.Error(w, "Failed to delete path", http.StatusInternalServerError)
+				return
+			}
+
 			w.WriteHeader(http.StatusNoContent)
 		}
 	})

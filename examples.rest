@@ -11,7 +11,7 @@ POST http://localhost:3000/dir
 POST http://localhost:3000/file
 Content-Type: multipart/form-data
 
-< /Users/hossain/Projects/objctr/config.go
+< config.go
 
 ### Copy File
 PUT http://localhost:3000/file.txt?to=dir/newFile.txt&action=copy

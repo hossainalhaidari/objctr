@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"io"
-	"io/fs"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -20,11 +18,7 @@ func isRoot(path string) bool {
 
 func exists(path string) bool {
 	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return false
-	}
-	if err != nil {
-		fmt.Println(err)
+	if err != nil || os.IsNotExist(err) {
 		return false
 	}
 	return true
@@ -33,58 +27,48 @@ func exists(path string) bool {
 func isFile(path string) bool {
 	info, err := os.Stat(path)
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
 	return !info.IsDir()
 }
 
-func list(path string) []string {
-	entries := []string{}
-	err := filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
-		if err == nil {
-			relativePath := strings.TrimPrefix(path, config.Path)
-			if info.IsDir() {
-				relativePath += "/"
-			}
-			entries = append(entries, relativePath)
+func list(path string) (bool, []string) {
+	dirs := []string{}
+	files := []string{}
+	entries, err := os.ReadDir(path)
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			continue
 		}
-		return nil
-	})
-
-	if err != nil {
-		fmt.Println(err)
+		if info.IsDir() {
+			dirs = append(dirs, entry.Name()+"/")
+		} else {
+			files = append(files, entry.Name())
+		}
 	}
-
-	return entries
+	return err == nil, append(dirs, files...)
 }
 
 func createDir(path string) bool {
 	err := os.Mkdir(path, 0755)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func uploadFile(file *multipart.FileHeader, outputPath string) bool {
 	src, err := file.Open()
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
 	defer src.Close()
 
 	dst, err := os.Create(outputPath)
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
 	defer dst.Close()
 
 	if _, err = io.Copy(dst, src); err != nil {
-		fmt.Println(err)
 		return false
 	}
 
@@ -93,37 +77,25 @@ func uploadFile(file *multipart.FileHeader, outputPath string) bool {
 
 func move(fromPath string, toPath string) bool {
 	err := os.Rename(fromPath, toPath)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func copy(fromPath string, toPath string) bool {
 	if isFile(fromPath) {
 		originalFile, err := os.Open(fromPath)
 		if err != nil {
-			fmt.Println(err)
 			return false
 		}
 		defer originalFile.Close()
 
 		newFile, err := os.Create(toPath)
 		if err != nil {
-			fmt.Println(err)
 			return false
 		}
 		defer newFile.Close()
 
 		_, err = io.Copy(newFile, originalFile)
-
-		if err != nil {
-			fmt.Println(err)
-			return false
-		}
-
-		return true
+		return err == nil
 	}
 
 	err := filepath.Walk(fromPath, func(path string, info os.FileInfo, err error) error {
@@ -160,19 +132,10 @@ func copy(fromPath string, toPath string) bool {
 		return nil
 	})
 
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func delete(path string) bool {
 	err := os.RemoveAll(path)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	return true
+	return err == nil
 }
