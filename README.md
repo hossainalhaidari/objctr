@@ -1,6 +1,6 @@
 # objctr
 
-A minimalistic object storage with that is easy to setup and a very simple to use.
+A minimalistic object storage with an easy to setup and a very simple API to use.
 
 ## Quick Start
 
