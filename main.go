@@ -69,13 +69,13 @@ func main() {
 
 				success := uploadFile(handler, fullPath)
 				if !success {
-					http.Error(w, "Failed to delete path", http.StatusInternalServerError)
+					http.Error(w, "Failed to upload file", http.StatusInternalServerError)
 					return
 				}
 			} else {
 				success := createDir(fullPath)
 				if !success {
-					http.Error(w, "Failed to delete path", http.StatusInternalServerError)
+					http.Error(w, "Failed to create directory", http.StatusInternalServerError)
 					return
 				}
 			}
@@ -99,7 +99,7 @@ func main() {
 
 			success := move(fullPath, toFullPath)
 			if !success {
-				http.Error(w, "Failed to delete path", http.StatusInternalServerError)
+				http.Error(w, "Failed to move path", http.StatusInternalServerError)
 				return
 			}
 
@@ -122,7 +122,7 @@ func main() {
 
 			success := copy(fullPath, toFullPath)
 			if !success {
-				http.Error(w, "Failed to delete path", http.StatusInternalServerError)
+				http.Error(w, "Failed to copy path", http.StatusInternalServerError)
 				return
 			}
 
